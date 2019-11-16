@@ -1,0 +1,42 @@
+#%RAML 1.0
+baseUri: https://anypoint.mulesoft.com/mocking/api/v1/links/e0929676-e4be-4ed2-8aaa-ed23ecf23971/ # 
+version: 1.0.3
+title: Lazy-Fashions
+
+types:
+  empData: !include customerDataType.raml
+
+/customer:
+  get:
+    responses:
+      200:
+        body:
+          application/json:
+            type: empData[]
+            examples: 
+              output: !include customer/customerDataExample.raml
+  
+  post:
+    body:
+      application/json:
+        examples:  
+          output: !include customer/OneCustomerExample.raml
+    responses:
+      201:
+        body:
+          application/json: 
+            examples: 
+                message: customer added
+
+  patch:  
+    body:
+      application/json:
+        example: !include customer/OneCustomerExample.raml
+    responses:
+      200:
+        body:
+          application/json:
+            example:
+                message: Customer updated!!
+
+  

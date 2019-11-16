@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd">
+	<salesforce:sfdc-config name="Salesforce_Config" doc:name="Salesforce Config" doc:id="bfc26527-4580-476a-a665-49dbcfff9596" >
+		<salesforce:cached-basic-connection username="shweta21@apisero.com" password="Apisero@210995" securityToken="dQp5WwBUaNg0y7XTkGqvF1DeA" />
+	</salesforce:sfdc-config>
+	<flow name="createCustomer" doc:id="c4418598-e8f4-4721-9925-061331612d16" >
+		<ee:transform doc:name="data to post" doc:id="d641513a-834a-40c8-a342-a053c3b18ec8" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+[{
+	"Id__c":"3",
+	"first_name__c":"priya",
+	"last_name__c":"sinha",
+	"salary__c " : "13000",
+	"address__c":"nanded"
+}]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<salesforce:create doc:name="insert data to salesforce" doc:id="16b98e1c-7082-404c-bdf7-ef1985be5695" config-ref="Salesforce_Config" type="lazy_fashions_customers__c"/>
+	</flow>
+	<flow name="updateCustomer" doc:id="2bab6952-bbde-4bd0-8074-1927e453d2b7" >
+		<ee:transform doc:name="data to update" doc:id="4d87736d-3276-4b4d-aeb1-534f41dfd20d" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+[{
+	"Id__c":"3",
+	"first_name__c":"isha",
+	"last_name__c":"johnson",
+	"salary__c " : "12000",
+	"address__c":"mumbai"
+	
+}]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<salesforce:upsert doc:name="update salesforce" doc:id="bad32455-905f-4001-8f1e-a7b0195b22d0" config-ref="Salesforce_Config" externalIdFieldName="Id__c" type="lazy_fashions_customers__c"/>
+	</flow>
+	<flow name="getCustomer" doc:id="cc2bb0df-2ffe-407a-980c-5ebfeda76634" >
+		<salesforce:query doc:name="get data from salesforce" doc:id="c7e877c2-b073-48d9-af95-a2febe8f435c" config-ref="Salesforce_Config">
+			<salesforce:salesforce-query >SELECT address__c,first_name__c,Id__c,last_name__c,salary__c FROM lazy_fashions_customers__c</salesforce:salesforce-query>
+		</salesforce:query>
+	</flow>
+</mule>
