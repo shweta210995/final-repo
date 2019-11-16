@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="96dcf3d3-397e-4533-9a8e-c7444fccd8bc" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="18e747eb-57b3-412d-8441-660bbd038087" >
+		<http:request-connection host="api.meteostat.net" protocol="HTTPS"/>
+	</http:request-config>
+	<flow name="getmaximuntempofmonth" doc:id="b21fb195-0d2f-4d2c-ac53-8c90a0152bfd" >
+		<http:listener doc:name="get data by year" doc:id="55a6279f-722f-40ae-a6df-fa067e0031d4" config-ref="HTTP_Listener_config" path="/avgtemp"/>
+		<set-variable value="#[attributes.queryParams.month]" doc:name="Set Variable" doc:id="e5f2d044-3634-47b2-abf7-e3a153a7b403" variableName="month" />
+		<http:request method="GET" doc:name="Request to metostat api" doc:id="b9ef9e71-dc41-4313-9308-cce28269f7b0" config-ref="HTTP_Request_configuration" path="/v1/history/daily?station=71508&amp;start=2017-01-01&amp;end=2017-12-31&amp;key=K5M0CLdn">
+			<http:uri-params ><![CDATA[#[output application/java
+---
+{
+	"" : ""
+}]]]></http:uri-params>
+		</http:request>
+		<logger level="INFO" doc:name="Logger" doc:id="977479bf-7bea-4893-a189-51199c805262" message="#[%dw 2.0
+output application/json
+---
+payload]"/>
+		<ee:transform doc:name="Transform Message" doc:id="5a57de88-0578-4824-8502-ea3bcc05d31a" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json skipNullOn="everywhere"
+
+---
+(payload.data map( v,i)->
+{
+    "max_temp" : if((v.date splitBy("-"))[1] == vars.month)
+                  (v.temperature_max)
+                  else null
+                  
+}).max_temp]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="Transform Message" doc:id="9746bfce-691f-421d-bb86-e8277b9c2d4d" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"max temperature of month is":max (payload)
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="averagepercipitationpermonth" doc:id="a87794c1-b533-4f50-b6ea-7de3ea0db17e" >
+		<http:listener doc:name="average precipitation per month" doc:id="2f81e02f-2fda-4337-8993-a2597fbbe75f" config-ref="HTTP_Listener_config" path="/avg" />
+		<http:request method="GET" doc:name="Request to metostat api" doc:id="ed80b76c-b06a-49d5-884f-28d16cf9cfca" config-ref="HTTP_Request_configuration" path="/v1/history/daily?station=71508&amp;start=2017-01-01&amp;end=2017-12-31&amp;key=K5M0CLdn" >
+			<http:uri-params ><![CDATA[#[output application/java
+---
+{
+	"" : ""
+}]]]></http:uri-params>
+		</http:request>
+		<logger level="INFO" doc:name="Logger" doc:id="2c6af2ec-301a-4b23-8408-e4101d6622e1" message="#[%dw 2.0
+output application/json
+---
+payload.data.precipitation]" />
+		<ee:transform doc:name="Transform Message" doc:id="4e295522-32ab-4072-8a6a-f8a825789edf" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+import * from dw::core::Arrays
+output application/json skipNullOn="everywhere"
+var arr = ['01','02','03','04','05','06','07','08','09','10','11','12']
+---
+arr map (v2,i2)->
+{
+(payload.data map( v,i)->
+{
+   "precipitation" : if((v.date splitBy("-"))[1] ==arr[i2] )
+                 (v.precipitation)
+                 else null
+                 
+})
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="5766f450-6446-4f66-bc39-71192d314c0d" message="payload is #[payload]"/>
+		<ee:transform doc:name="average precipitation per month" doc:id="4bf9c689-ef7a-4007-b456-22a3750b1e60" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+import * from dw::core::Objects
+output application/json skipNullOn="everywhere"
+---
+payload map (v,i)->
+{
+   "precipitation": avg(valueSet(v))
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="lowesttempperweek" doc:id="1d1be9e0-47ca-4d73-87f0-4f8e8314c205" >
+		<http:listener doc:name="lowest temperatures per week." doc:id="47639391-4aa7-4054-bbc9-0b564037667b" config-ref="HTTP_Listener_config" path="/low" />
+		<http:request method="GET" doc:name="Request to metostat api" doc:id="ba1b198c-2d9b-42ff-996e-c7582833ab24" config-ref="HTTP_Request_configuration" path="/v1/history/daily?station=71508&amp;start=2017-01-01&amp;end=2017-12-31&amp;key=K5M0CLdn" >
+			<http:uri-params ><![CDATA[#[output application/java
+---
+{
+	"" : ""
+}]]]></http:uri-params>
+		</http:request>
+		<logger level="INFO" doc:name="Logger" doc:id="e799d67a-95d1-419a-9907-e1c71133c27f" message="#[payload]" />
+		<ee:transform doc:name="Transform Message" doc:id="4a76ffea-7a5d-412c-8d1d-23828ee4637c" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+import * from dw::core::Arrays
+output application/json
+---
+payload.data divideBy 7 map ((item, index) -> {
+"$index": min(item.temperature_min)
+})]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="logger" doc:id="86c7ca5f-bc82-4bc0-a97a-accba160032f" message="payload is #[payload]" />
+	</flow>
+</mule>
