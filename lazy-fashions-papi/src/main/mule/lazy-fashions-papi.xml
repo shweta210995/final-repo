@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="efac045f-3435-461b-90b4-574879344618" >
+		<http:listener-connection host="0.0.0.0" port="8082" />
+	</http:listener-config>
+	<db:config name="Database_Config1" doc:name="Database Config" doc:id="543a8213-f8e8-4bb6-8502-94fa1e69c64c" >
+		<db:my-sql-connection host="db4free.net" port="3306" user="shweta2109" password="Shweta@210995" database="lazyfashions123" />
+	</db:config>
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="6993b1b8-6ba3-4f12-8cca-a0341bd4f0fc" >
+		<http:request-connection host="localhost" port="8081" />
+	</http:request-config>
+	<flow name="lazy-fashions-papiFlow" doc:id="754ebeec-5949-4612-852c-3be63f65fb6f" >
+		<scheduler doc:name="Scheduler" doc:id="711eebd7-f8c6-420c-8a34-84e8e2ccdb1c" >
+			<scheduling-strategy >
+				<fixed-frequency frequency="1" timeUnit="DAYS"/>
+			</scheduling-strategy>
+		</scheduler>
+		<db:execute-ddl doc:name="Execute DDL" doc:id="42eecc5e-a71e-4d06-9143-a7134bff38d9" config-ref="Database_Config1">
+			<db:sql >truncate  customer</db:sql>
+		</db:execute-ddl>
+		<logger level="INFO" doc:name="Logger" doc:id="3aea8307-c9e7-4553-9828-f80c7741bc28" message="table truncated"/>
+		<http:request method="GET" doc:name="Request" doc:id="67430cbd-e30d-41bb-957b-1fb94eaca263" config-ref="HTTP_Request_configuration" path="api/customer"/>
+		<ee:transform doc:name="Transform Message" doc:id="77776866-47af-4dba-a6b3-cdcd5898e327" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="732264cc-27f3-4552-9236-cbe84d28542a" message="#[payload]"/>
+		<foreach doc:name="For Each" doc:id="8dbf80a3-2507-459a-ac88-44d57bec3f9a" collection="#[payload]">
+			<db:insert doc:name="Insert" doc:id="41e57090-f822-46a7-b0d3-aafabfe46428" config-ref="Database_Config1">
+			<db:sql>insert into customer(id,firstName,lastName,salary,address) values( :id, :firstName, :lastName, :salary, :address)</db:sql>
+			<db:input-parameters><![CDATA[#[{ 'id': payload.Id__c,
+'firstName': payload."first_name__c",
+'lastName': payload."last_name__c",
+'salary': payload.salary__c,
+'address': payload.address__c}]]]></db:input-parameters>
+		</db:insert>
+		</foreach>
+	</flow>
+</mule>
