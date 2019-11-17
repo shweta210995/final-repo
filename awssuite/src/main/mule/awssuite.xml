@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:s3="http://www.mulesoft.org/schema/mule/s3" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/s3 http://www.mulesoft.org/schema/mule/s3/current/mule-s3.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="df7fdf60-b36e-4076-b32e-712be6af10bf" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<s3:config name="Amazon_S3_Configuration" doc:name="Amazon S3 Configuration" doc:id="ea2b7f9d-8798-420f-b94d-7453c9b158bd" >
+		<s3:basic-connection accessKey="AKIAJWKZDPLHRO4WPP7A" secretKey="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" region="US_EAST_2" />
+	</s3:config>
+	<flow name="awssuiteFlow" doc:id="51c7b1cf-693d-4f92-8f86-5bb6fda210b0" >
+		<http:listener doc:name="Listener" doc:id="71defbb0-f39e-4af0-8ce2-6eb256601d34" config-ref="HTTP_Listener_config" path="/notification"/>
+		<logger level="INFO" doc:name="Logger" doc:id="492075d1-50c7-4ba7-97e1-d7d6f3211c07" message="#[payload]"/>
+		<logger level="INFO" doc:name="Logger" doc:id="4bf4cf03-7f42-49c5-89f0-c034bdbf85a5" message="message received from aws"/>
+		<ee:transform doc:name="Transform Message" doc:id="ac6c6078-82be-4dc3-898a-7aeec09fa60c" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<s3:get-object doc:name="Get object" doc:id="356fe393-51fd-4abd-80e5-d183dd3e92cd" config-ref="Amazon_S3_Configuration" bucketName="shweta-amilkanthwar" key="sample.txt"/>
+		<logger level="INFO" doc:name="Logger" doc:id="9639dbf7-44d0-4abd-83c5-621d0b608aa4" message="content of file is: #[payload]"/>
+	</flow>
+</mule>
