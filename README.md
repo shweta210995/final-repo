@@ -1,7 +1,7 @@
 bucket name :shweta-amilkanthwar
 topic name is: shwetaA1 
 cloudhub url for mule app is http://awssuite1.us-e2.cloudhub.io/notification  
-
+Note:upload sample,txt file to bucket .Uploaded sample.txt file here also
 logs of cloudhub:
 
 14:01:20.757     11/17/2019     Worker-0     [MuleRuntime].cpuLight.03: [awssuite1].awssuiteFlow.CPU_LITE @3457a3a9     INFO
