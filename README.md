@@ -1,3 +1,13 @@
+Date: 16 Nov 2019
+assignment 1:
+lazy-fashions-sapi-get,patch and post data to salesforce 
+lazy-fashions-papi-get data from lazy-fashions-api and post it to SQL
+
+
+Date: 17 Nov 2019
+
+Research QuestionDemonstrate how you can use AWS suite as a replacement to ftp based file polling.:
+
 bucket name :shweta-amilkanthwar
 topic name is: shwetaA1 
 cloudhub url for mule app is http://awssuite1.us-e2.cloudhub.io/notification  
