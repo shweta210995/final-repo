@@ -10,7 +10,7 @@ http://www.mulesoft.org/schema/mule/s3 http://www.mulesoft.org/schema/mule/s3/cu
 		<http:listener-connection host="0.0.0.0" port="8081" />
 	</http:listener-config>
 	<s3:config name="Amazon_S3_Configuration" doc:name="Amazon S3 Configuration" doc:id="ea2b7f9d-8798-420f-b94d-7453c9b158bd" >
-		<s3:basic-connection accessKey="AKIAJWKZDPLHRO4WPP7A" secretKey="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" region="US_EAST_2" />
+		<s3:basic-connection accessKey="accessKey" secretKey="secretKey" region="US_EAST_2" />
 	</s3:config>
 	<flow name="awssuiteFlow" doc:id="51c7b1cf-693d-4f92-8f86-5bb6fda210b0" >
 		<http:listener doc:name="Listener" doc:id="71defbb0-f39e-4af0-8ce2-6eb256601d34" config-ref="HTTP_Listener_config" path="/notification"/>
