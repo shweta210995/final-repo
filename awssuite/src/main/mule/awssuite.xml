@@ -24,7 +24,7 @@ output application/json
 payload]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-		<s3:get-object doc:name="Get object" doc:id="356fe393-51fd-4abd-80e5-d183dd3e92cd" config-ref="Amazon_S3_Configuration" bucketName="shweta-amilkanthwar" key="samplread(payload.Message,"application/json").Records.s3.object.key[0]"/>
+		<s3:get-object doc:name="Get object" doc:id="356fe393-51fd-4abd-80e5-d183dd3e92cd" config-ref="Amazon_S3_Configuration" bucketName="shweta-amilkanthwar" key='#[read(payload.Message,"application/json").Records.s3.object.key[0]]'/>
 		<logger level="INFO" doc:name="Logger" doc:id="9639dbf7-44d0-4abd-83c5-621d0b608aa4" message="content of file is: #[payload]"/>
 	</flow>
 </mule>
