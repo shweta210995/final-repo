@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd  http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+    <flow name="sf-objects-sapi-main">
+        <http:listener config-ref="sf-objects-sapi-httpListenerConfig" path="/api/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="sf-objects-sapi-config" />
+        <error-handler ref="standardAPIKitErrorHandler" />
+    </flow>
+    <flow name="sf-objects-sapi-console">
+        <http:listener config-ref="sf-objects-sapi-httpListenerConfig" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="sf-objects-sapi-config" />
+        <error-handler ref="standardAPIKitErrorHandler" />
+    </flow>
+    <flow name="get:\customers:sf-objects-sapi-config">
+        <ee:transform doc:name="set queryParam and header as var" doc:id="a4b5fcb2-2b63-400a-bf42-1692d280368f">
+            <ee:variables>
+                <ee:set-variable variableName="lastModifiedDate"><![CDATA[attributes.queryParams.lastModifiedDate]]></ee:set-variable>
+                <ee:set-variable variableName="xProcessInstanceId"><![CDATA[attributes.headers['x-process-instance-id']]]></ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <flow-ref name="impl_cust_startProcess" doc:name="impl_cust_startProcess" />
+    </flow>
+    <flow name="patch:\updateStatus:sf-objects-sapi-config">
+        <ee:transform doc:name="process-id" doc:id="b031c08c-96cf-4957-b351-75051bc8d499">
+            <ee:variables>
+                <ee:set-variable variableName="xProcessInstanceId"><![CDATA[attributes.headers['x-process-instance-id']]]></ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <flow-ref name="impl_cust_update_status_start_process" doc:name="impl_cust_update_status_start_process" />
+    </flow>
+    <flow name="get:\invoices:sf-objects-sapi-config">
+        <ee:transform doc:name="set queryParam and header as var" doc:id="48c78b74-87e9-412f-8a39-d85670982fc5">
+            <ee:variables>
+                <ee:set-variable variableName="lastModifiedDate"><![CDATA[attributes.queryParams.lastModifiedDate default ""]]></ee:set-variable>
+                <ee:set-variable variableName="xProcessInstanceId"><![CDATA[attributes.headers['x-process-instance-id']]]></ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <choice doc:name="Choice" doc:id="346ddbc4-a520-42af-a490-cd51700ac22e" >
+			<when expression="#[vars.lastModifiedDate !=null]">
+				<flow-ref doc:name="impl_invoices_startProcess" doc:id="1a62da68-84b5-4809-bb93-94115fec7591" name="impl_invoices_startProcess" />
+			</when>
+			<otherwise >
+				<flow-ref doc:name="impl_retrieveInvoices" doc:id="65418a2d-0746-4f54-8d3d-48fdce5e0f98" name="impl_retrieveInvoices"/>
+			</otherwise>
+		</choice>
+    </flow>
+    <flow name="post:\timeEntryPart:sf-objects-sapi-config">
+        <logger level="INFO" message="post:\timeEntryPart:sf-objects-sapi-config" />
+		<ee:transform doc:name="set var xProcessInstanceId" doc:id="d10add74-1219-4296-8e7b-92ebe1c5828e" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="xProcessInstanceId" ><![CDATA[attributes.headers['x-process-instance-id']]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<flow-ref doc:name="consume-csv-payload" doc:id="d001e027-a319-4916-8b12-03d643bce432" name="consume-csv-payload"/>
+    </flow>
+</mule>
